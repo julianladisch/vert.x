@@ -17,7 +17,7 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * Used for lazy loading the default JDK cipher suite.
+ * Used for lazy loading JDK cipher suites for TLSv1.2 and later.
  */
 class DefaultJDKCipherSuite {
 
@@ -26,7 +26,7 @@ class DefaultJDKCipherSuite {
   static {
     ArrayList<String> suite = new ArrayList<>();
     try {
-      SSLContext context = SSLContext.getInstance("TLS");
+      SSLContext context = SSLContext.getInstance("TLSv1.2");
       context.init(null, null, null);
       SSLEngine engine = context.createSSLEngine();
       Collections.addAll(suite, engine.getEnabledCipherSuites());

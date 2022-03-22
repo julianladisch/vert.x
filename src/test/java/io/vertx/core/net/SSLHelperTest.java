@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2019 Contributors to the Eclipse Foundation
+ * Copyright (c) 2011-2022 Contributors to the Eclipse Foundation
  *
  * This program and the accompanying materials are made available under the
  * terms of the Eclipse Public License 2.0 which is available at
@@ -11,11 +11,14 @@
 
 package io.vertx.core.net;
 
-import io.netty.handler.ssl.OpenSsl;
+import static org.hamcrest.CoreMatchers.anyOf;
+import static org.hamcrest.CoreMatchers.hasItems;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.not;
+
 import io.netty.handler.ssl.OpenSslServerContext;
 import io.netty.handler.ssl.OpenSslServerSessionContext;
 import io.netty.handler.ssl.SslContext;
-import io.vertx.core.http.HttpClientOptions;
 import io.vertx.core.http.HttpServerOptions;
 import io.vertx.core.impl.VertxInternal;
 import io.vertx.core.json.JsonObject;
@@ -35,28 +38,22 @@ import java.util.*;
  */
 public class SSLHelperTest extends VertxTestBase {
 
-  @Test
-  public void testUseJdkCiphersWhenNotSpecified() throws Exception {
-    SSLContext context = SSLContext.getInstance("TLS");
-    context.init(null, null, null);
-    SSLEngine engine = context.createSSLEngine();
-    String[] expected = engine.getEnabledCipherSuites();
-    SSLHelper helper = new SSLHelper(new HttpClientOptions(),
-        Cert.CLIENT_JKS.get(),
-        Trust.SERVER_JKS.get());
-    SslContext ctx = helper.getContext((VertxInternal) vertx);
-    assertEquals(new HashSet<>(Arrays.asList(expected)), new HashSet<>(ctx.cipherSuites()));
+  private void testDefaultCiphers(HttpServerOptions httpServerOptions) {
+    List<String> ciphers = new SSLHelper(httpServerOptions, Cert.CLIENT_JKS.get(), Trust.SERVER_JKS.get())
+        .getContext((VertxInternal) vertx).cipherSuites();
+    assertThat(ciphers.size(), anyOf(is(9), is(11)));
+    assertThat(ciphers, hasItems("TLS_AES_256_GCM_SHA384"));
+    assertThat(ciphers, not(hasItems("TLS_EMPTY_RENEGOTIATION_INFO_SCSV", "DES-CBC3-SHA")));
   }
 
   @Test
-  public void testUseOpenSSLCiphersWhenNotSpecified() throws Exception {
-    Set<String> expected = OpenSsl.availableOpenSslCipherSuites();
-    SSLHelper helper = new SSLHelper(
-        new HttpClientOptions().setOpenSslEngineOptions(new OpenSSLEngineOptions()),
-        Cert.CLIENT_PEM.get(),
-        Trust.SERVER_PEM.get());
-    SslContext ctx = helper.getContext((VertxInternal) vertx);
-    assertEquals(expected, new HashSet<>(ctx.cipherSuites()));
+  public void testDefaultJdkCiphers() {
+    testDefaultCiphers(new HttpServerOptions());
+  }
+
+  @Test
+  public void testDefaultOpenSslCiphers() {
+    testDefaultCiphers(new HttpServerOptions().setOpenSslEngineOptions(new OpenSSLEngineOptions()));
   }
 
   @Test
