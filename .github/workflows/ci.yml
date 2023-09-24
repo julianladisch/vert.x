@@ -29,8 +29,8 @@ jobs:
           distribution: temurin
       - name: Bump Guava version to 32.1.2-jre
         run: |
-          mvn -s .github/maven-ci-settings.xml org.apache.maven.plugins:maven-dependency-plugin:tree -Dincludes=com.google.* -B
+          mvn -s .github/maven-ci-settings.xml org.apache.maven.plugins:maven-dependency-plugin:tree -D includes=com.google.* -B
           sed -i 's/30.1.1-jre/32.1.2-jre/' ~/.m2/repository/io/vertx/vertx-dependencies/5.0.0-SNAPSHOT/*.pom
-          mvn -s .github/maven-ci-settings.xml org.apache.maven.plugins:maven-dependency-plugin:tree -Dincludes=com.google.* -B
+          mvn -s .github/maven-ci-settings.xml org.apache.maven.plugins:maven-dependency-plugin:tree -D includes=com.google.* -B
       - name: Run tests
         run: mvn -s .github/maven-ci-settings.xml -q clean verify -B ${{ inputs.profile }}
